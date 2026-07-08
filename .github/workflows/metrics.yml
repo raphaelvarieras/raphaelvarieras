@@ -1,0 +1,36 @@
+name: Metrics
+
+# Manual-only: this workflow does NOT run on a schedule.
+# Refresh the infographic on demand from the Actions tab ("Run workflow"),
+# or via: gh workflow run metrics.yml
+#
+# To include org / private-repo stats, set a short-lived METRICS_TOKEN secret
+# just before running and delete it after. With no secret set, it falls back
+# to the built-in token and shows public data only.
+on:
+  workflow_dispatch:
+
+jobs:
+  github-metrics:
+    runs-on: ubuntu-latest
+    permissions:
+      # Only scope needed: commit the regenerated SVG back to this repo.
+      contents: write
+    steps:
+      # Pinned to a commit SHA (v3.34) rather than @latest, so a compromised
+      # upstream release can't run with whatever token is present.
+      - uses: lowlighter/metrics@65836723097537a54cd8eb90f61839426b4266b6 # v3.34
+        with:
+          # Uses METRICS_TOKEN (a short-lived PAT) when present; otherwise falls
+          # back to the built-in GITHUB_TOKEN (public data only). No standing
+          # credential lives here between manual refreshes.
+          token: ${{ secrets.METRICS_TOKEN || secrets.GITHUB_TOKEN }}
+          user: raphaelvarieras
+          filename: github-metrics.svg
+          config_timezone: America/Chicago
+
+          base: header, activity, community, repositories
+
+          plugin_languages: yes
+          plugin_languages_details: bytes-size, percentage
+          plugin_languages_limit: 8
